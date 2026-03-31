@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Đổ Xăm Hường</title>
+<meta name="theme-color" content="#9B1B1B"/>
+<link rel="manifest" href="manifest.json"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#FAF3E0;font-family:serif;min-height:100vh;}
+.page{max-width:500px;margin:0 auto;padding:1.25rem 1rem;}
+.card{background:rgba(245,237,214,0.96);border:1px solid #B8860B80;border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+h1{font-size:26px;font-weight:500;color:#9B1B1B;text-align:center;}
+.subtitle{font-size:13px;color:#B8860B;text-align:center;letter-spacing:.15em;margin-bottom:4px;}
+.divider{display:flex;align-items:center;gap:8px;margin:10px 0;}
+.divider div:first-child,.divider div:last-child{flex:1;height:.5px;background:#B8860B60;}
+.diamond{width:6px;height:6px;background:#B8860B;transform:rotate(45deg);}
+input{width:100%;padding:8px 12px;border:1px solid #B8860B60;border-radius:6px;font-size:14px;background:#FAF3E0;color:#2C1810;font-family:serif;outline:none;}
+.btn-primary{width:100%;padding:11px;background:#9B1B1B;color:#FFF5E6;border:none;border-radius:8px;font-size:15px;font-family:serif;cursor:pointer;margin-top:4px;}
+.btn-secondary{width:100%;padding:11px;background:transparent;color:#7A5C3A;border:1px solid #B8860B60;border-radius:8px;font-size:14px;font-family:serif;cursor:pointer;margin-top:4px;}
+.btn-primary:disabled{background:#C9828240;cursor:not-allowed;}
+.scoreboard{display:grid;gap:6px;margin-bottom:12px;}
+.score-cell{padding:6px;border-radius:8px;text-align:center;background:rgba(245,237,214,0.88);border:.5px solid #B8860B50;}
+.score-cell.active{background:#FDEAEA;border-color:#9B1B1B90;}
+.score-name{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#A08060;}
+.score-name.active{color:#9B1B1B;}
+.score-pts{font-size:16px;font-weight:500;color:#2C1810;}
+.score-pts.active{color:#9B1B1B;}
+.dice-wrap{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.msg{padding:10px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;line-height:1.5;border:.5px solid #B8860B50;background:#FAF3E0;}
+.msg.special{background:#FDEAEA;border-color:#9B1B1B70;color:#9B1B1B;}
+.btn-row{display:flex;gap:10px;justify-content:center;}
+.stock-grid{display:grid;gap:4px;justify-items:center;}
+.log-box{max-height:88px;overflow-y:auto;padding:8px 14px;}
+.log-line{font-size:11px;padding:3px 0;border-bottom:.5px solid #B8860B30;}
+.log-line.new{color:#2C1810;}
+.log-line.old{color:#A08060;}
+.room-code{font-size:24px;font-weight:500;color:#B8860B;letter-spacing:.25em;text-align:center;margin:8px 0;}
+.player-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid #B8860B30;}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:500;}
+.waiting-msg{text-align:center;font-size:13px;color:#A08060;margin-top:8px;}
+.tile-label{font-size:10px;font-weight:500;text-align:center;font-family:serif;margin-bottom:2px;}
+.tile-count{font-size:9px;text-align:center;font-family:sans-serif;}
+.tile-pts{font-size:9px;color:#8B6914;text-align:center;font-family:sans-serif;}
+.hand-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.hand-item{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.hand-count{font-size:9px;font-family:sans-serif;}
+.turn-banner{text-align:center;padding:8px 14px;border-radius:8px;margin-bottom:10px;font-size:14px;}
+.trang-banner{background:#FDEAEA;border:.5px solid #9B1B1B50;border-radius:8px;padding:7px 14px;margin-bottom:10px;text-align:center;font-size:12px;color:#9B1B1B;}
+</style>
+</head>
+<body>
+<div class="page" id="app">Đang tải...</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBjhGUkpkAiYvzIUPhnWyuyj3SQJU4LSnw",
+  authDomain: "do-xam-huong.firebaseapp.com",
+  databaseURL: "https://do-xam-huong-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "do-xam-huong",
+  storageBucket: "do-xam-huong.firebasestorage.app",
+  messagingSenderId: "273822809628",
+  appId: "1:273822809628:web:867e4049d10e0641f8e9d9",
+  measurementId: "G-64VCXMXRVV"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const TILES = [
+  {name:"Tú tài",count:32,points:1,col:"#4A7FA4",han:"秀才"},
+  {name:"Cử nhân",count:16,points:2,col:"#2E7D4F",han:"舉人"},
+  {name:"Tiến sĩ",count:8,points:4,col:"#7B3FA0",han:"進士"},
+  {name:"Hội nguyên",count:4,points:8,col:"#C07000",han:"會元"},
+  {name:"Thám hoa",count:4,points:16,col:"#0A4D2A",han:"探花"},
+  {name:"Trạng nguyên",count:1,points:32,col:"#9B1B1B",han:"狀元"},
+];
+const TOTAL = 65;
+
+function initStock(){ return TILES.map(t=>({...t,remaining:t.count})); }
+function roll6(){ return Array.from({length:6},()=>Math.floor(Math.random()*6)+1); }
+function makeid(){ return Math.random().toString(36).slice(2,7).toUpperCase(); }
+
+function evalRoll(dice){
+  const c=[0,0,0,0,0,0]; dice.forEach(d=>c[d-1]++);
+  const h=c[3]; const ten=["nhất","nhị","tam","tứ","ngũ","lục"];
+  if(h===6) return {tile:5,label:"Lục hường — THẮNG NGAY!",ta:9999,special:"instant_win"};
+  const ld=[0,1,2,4,5].find(i=>c[i]===6);
+  if(ld!==undefined) return {tile:5,label:`Lục tử ${ten[ld]} — Trạng nguyên!`,ta:7500+ld,special:null};
+  const ng=[0,1,2,4,5].find(i=>c[i]===5);
+  if(ng!==undefined){const o=dice.find(d=>d!==ng+1)||0;const da=o===4;
+    return {tile:5,label:`Ngũ tử ${ten[ng]}${da?" đại ấn":""}`,ta:da?6500:3000+(ng+1)*10+o,special:null};}
+  if(h===4){const r=dice.filter(d=>d!==4);const s=r[0]+r[1];const ch=r[0]===r[1];
+    return {tile:5,label:`Tứ hường ${ch?"cáp chính":"cáp xiên"} (tuổi ${s})`,ta:ch?5000+s:4000+s,special:null};}
+  const tt2=[0,1,2,3,4,5].filter(i=>c[i]===3);
+  if(tt2.length===2) return {tile:-1,label:"Huệ (Trùng tam) — mất lượt!",ta:0,special:"hue"};
+  const tu=[0,1,2,4,5].find(i=>c[i]===4);
+  if(tu!==undefined) return {tile:4,label:`Tứ tuyệt ${ten[tu]} — Thám hoa!`,ta:0,special:null};
+  const pr=[0,1,2,3,4,5].filter(i=>c[i]===2);
+  if(pr.length===3) return {tile:4,label:"Phân cam — Thám hoa!",ta:0,special:null};
+  if(h===3) return {tile:3,label:"Tam hường — Hội nguyên!",ta:0,special:null};
+  if(h===2) return {tile:1,label:"Nhị hường — Cử nhân!",ta:0,special:null};
+  if(h===1) return {tile:0,label:"Nhất hường — Tú tài!",ta:0,special:null};
+  return {tile:-1,label:"Không có mặt Hường",ta:0,special:null};
+}
+
+function applyRoll(gs,pi,dice){
+  const ev=evalRoll(dice);
+  const np=gs.players.map(p=>({...p,tiles:[...p.tiles]}));
+  const ns=gs.stock.map(s=>({...s}));
+  let nth=gs.trangHolder,nta=gs.trangAge,nsl=gs.stockLeft,msg="";
+  const pn=np[pi].name;
+  if(ev.special==="instant_win") return {...gs,players:np,stock:ns,dice,lastMsg:`${pn}: ${ev.label}`,phase:"end"};
+  if(ev.special==="hue") return {...gs,dice,lastMsg:`${pn}: ${ev.label}`,turn:(gs.turn+1)%np.length,rolled:false};
+  if(ev.tile===5){
+    if(nth===null&&ns[5].remaining>0){
+      np[pi].tiles[5]++;np[pi].points+=32;ns[5].remaining--;nsl--;nth=pi;nta=ev.ta;
+      msg=`${pn}: ${ev.label} — đoạt Trạng!`;
+    } else if(nth!==null&&ev.ta>nta){
+      const prev=np[nth].name;np[nth].tiles[5]--;np[nth].points-=32;
+      np[pi].tiles[5]++;np[pi].points+=32;nth=pi;nta=ev.ta;
+      msg=`${pn} cướp Trạng từ ${prev}!`;
+    } else if(nth===null){msg=`${pn}: ${ev.label} — hết thẻ!`;}
+    else{msg=`${pn}: ${ev.label} — tuổi thấp hơn.`;}
+  } else if(ev.tile>=0){
+    const t=ev.tile;
+    if(ns[t].remaining>0){np[pi].tiles[t]++;np[pi].points+=TILES[t].points;ns[t].remaining--;nsl--;msg=`${pn}: ${ev.label} (+${TILES[t].points}đ)`;}
+    else{msg=`${pn}: ${ev.label} — hết thẻ!`;}
+  } else{msg=`${pn}: ${ev.label}`;}
+  const log=[msg,...(gs.log||[])].slice(0,20);
+  return {...gs,players:np,stock:ns,stockLeft:nsl,trangHolder:nth,trangAge:nta,
+    dice,lastMsg:msg,log,phase:nsl<=0?"end":gs.phase,rolled:true};
+}
+
+function tileSVG(idx,w=36,h=110,faded=false){
+  const t=TILES[idx]; if(!t) return "";
+  const rc=t.col;
+  const chars=t.han.split("").map((ch,i)=>`<text x="18" y="${42+i*16}" text-anchor="middle" font-size="13" fill="${rc}" font-weight="bold" font-family="serif">${ch}</text>`).join("");
+  return `<svg width="${w}" height="${h}" viewBox="0 0 36 110" style="opacity:${faded?0.25:1};display:block">
+    <rect x="6" y="18" width="24" height="82" rx="3" fill="#F5EDD6" stroke="#c8b06a" stroke-width="1"/>
+    <ellipse cx="18" cy="18" rx="9" ry="7" fill="#F5EDD6" stroke="#c8b06a" stroke-width="1"/>
+    <ellipse cx="18" cy="10" rx="6.5" ry="5.5" fill="#F5EDD6" stroke="#c8b06a" stroke-width="1"/>
+    <ellipse cx="18" cy="4" rx="4" ry="3.5" fill="#F5EDD6" stroke="#c8b06a" stroke-width="1"/>
+    <ellipse cx="18" cy="1.2" rx="2" ry="1.5" fill="#F5EDD6" stroke="#c8b06a" stroke-width="0.8"/>
+    ${chars}
+  </svg>`;
+}
+
+function tileStackHTML(tile,idx){
+  const n=Math.min(tile.remaining,4); const empty=tile.remaining===0;
+  const rc=TILES[idx]?.col||"#888";
+  let stacks="";
+  if(empty){stacks=tileSVG(idx,36,110,true);}
+  else{for(let i=0;i<n;i++) stacks+=`<div style="position:absolute;top:${i*3}px;left:${i*1.5}px">${tileSVG(idx,36,110,false)}</div>`;}
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+    <div class="tile-label" style="color:${rc}">${TILES[idx]?.name}</div>
+    <div style="position:relative;width:36px;height:116px">${stacks}</div>
+    <div class="tile-count" style="color:${empty?"#bbb":rc}">${tile.remaining}/${tile.count}</div>
+    <div class="tile-pts">${TILES[idx]?.points}đ</div>
+  </div>`;
+}
+
+function handHTML(tiles){
+  const has=tiles.some(n=>n>0);
+  if(!has) return `<div style="font-size:11px;color:#A08060;font-style:italic">Chưa có thẻ</div>`;
+  let html="";
+  tiles.forEach((n,i)=>{
+    if(n<=0) return;
+    let stacks="";
+    for(let j=0;j<Math.min(n,3);j++) stacks+=`<div style="position:absolute;top:${j*2}px;left:${j}px">${tileSVG(i,27,83,false)}</div>`;
+    html+=`<div class="hand-item">
+      <div style="position:relative;width:27px;height:${n>1?80:75}px">${stacks}</div>
+      ${n>1?`<div class="hand-count" style="color:${TILES[i]?.col}">×${n}</div>`:""}
+    </div>`;
+  });
+  return `<div class="hand-wrap">${html}</div>`;
+}
+
+function dieSVG(val,rolling){
+  const pos={1:[[50,50]],2:[[28,28],[72,72]],3:[[28,28],[50,50],[72,72]],
+    4:[[28,28],[72,28],[28,72],[72,72]],5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
+    6:[[28,22],[72,22],[28,50],[72,50],[28,78],[72,78]]};
+  const isH=val===4;
+  const dots=(pos[val]||[]).map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="${isH?10:8.5}" fill="${isH?"#9B1B1B":"#2C1810}"/>`).join("");
+  return `<svg width="50" height="50" viewBox="0 0 100 100" style="filter:${rolling?"blur(1.5px)":"none"};display:block">
+    <rect x="4" y="4" width="92" height="92" rx="14" fill="${isH?"#FFF0F0":"#FFFAF0"}" stroke="${isH?"#9B1B1B":"#B8860B"}" stroke-width="3.5"/>
+    <rect x="8" y="8" width="84" height="84" rx="11" fill="none" stroke="${isH?"#D4302030":"#D4A01730"}" stroke-width="1"/>
+    ${dots}
+  </svg>`;
+}
+
+// ---- STATE ----
+let screen="lobby", myName="", myIdx=null, roomCode="", isHost=false;
+let gs=null, rolling=false, localDice=[1,2,3,4,5,6];
+let unsubscribe=null;
+
+function render(){
+  const app=document.getElementById("app");
+  if(screen==="lobby") app.innerHTML=renderLobby();
+  else if(screen==="waiting") app.innerHTML=renderWaiting();
+  else if(screen==="game") app.innerHTML=renderGame();
+  else if(screen==="end") app.innerHTML=renderEnd();
+  bindEvents();
+}
+
+function renderLobby(){
+  return `
+  <div style="text-align:center;margin-bottom:20px;padding-top:12px">
+    <div class="subtitle">❧ CUNG ĐÌNH HUẾ ❧</div>
+    <h1>Đổ Xăm Hường</h1>
+    <div style="font-size:12px;color:#7A5C3A">Chơi online cùng bạn bè</div>
+    <div class="divider"><div></div><div class="diamond"></div><div></div></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;color:#7A5C3A;margin-bottom:8px">Tên của bạn</div>
+    <input id="inp-name" type="text" placeholder="Nhập tên..." value="${myName}"/>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;color:#7A5C3A;margin-bottom:10px">Tạo phòng mới</div>
+    <button class="btn-primary" id="btn-create">⟡ Tạo phòng</button>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;color:#7A5C3A;margin-bottom:8px">Vào phòng có sẵn</div>
+    <input id="inp-code" type="text" placeholder="Nhập mã phòng..." style="text-align:center;letter-spacing:.2em;font-size:16px;text-transform:uppercase;margin-bottom:10px"/>
+    <button class="btn-secondary" id="btn-join">→ Vào phòng</button>
+  </div>`;
+}
+
+function renderWaiting(){
+  if(!gs) return "<div class='waiting-msg'>Đang tải...</div>";
+  const players=gs.players||[];
+  const rows=players.map((p,i)=>`
+    <div class="player-row">
+      <div class="avatar" style="background:${i===0?"#9B1B1B":"#B8860B"}">${i+1}</div>
+      <div style="font-size:14px;color:#2C1810;font-family:serif">${p.name}${i===myIdx?" (bạn)":""}</div>
+    </div>`).join("");
+  return `
+  <div style="text-align:center;margin-bottom:16px;padding-top:12px">
+    <h1 style="font-size:20px">Phòng chờ</h1>
+    <div class="divider"><div></div><div class="diamond"></div><div></div></div>
+    <div class="room-code">${roomCode}</div>
+    <div style="font-size:12px;color:#7A5C3A">Chia sẻ mã này cho bạn bè</div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;color:#7A5C3A;margin-bottom:10px">Người chơi (${players.length}/6)</div>
+    ${rows}
+  </div>
+  ${isHost
+    ? `<button class="btn-primary" id="btn-start" ${players.length<2?"disabled":""}>⟡ Bắt đầu chơi (${players.length} người)</button>`
+    : `<div class="waiting-msg">Đang chờ chủ phòng bắt đầu...</div>`
+  }`;
+}
+
+function renderGame(){
+  if(!gs) return "<div class='waiting-msg'>Đang tải...</div>";
+  const isMyTurn=gs.turn===myIdx;
+  const cur=gs.players[gs.turn];
+  const cols=gs.players.length;
+  const scoreboards=gs.players.map((p,i)=>`
+    <div class="score-cell ${i===gs.turn?"active":""}">
+      <div class="score-name ${i===gs.turn?"active":""}">${p.name}${i===myIdx?"★":""}</div>
+      <div class="score-pts ${i===gs.turn?"active":""}">${p.points}</div>
+      ${gs.trangHolder===i?`<div style="font-size:9px;color:#B8860B">◈ Trạng</div>`:""}
+    </div>`).join("");
+  const diceHTML=(rolling?localDice:gs.dice||localDice).map(d=>dieSVG(d,rolling)).join("");
+  const msgIsSpecial=gs.lastMsg&&(gs.lastMsg.includes("Trạng")||gs.lastMsg.includes("THẮNG"));
+  return `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div style="font-size:15px;color:#9B1B1B;font-weight:500">Đổ Xăm Hường</div>
+    <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:#A08060">
+      <span>Phòng: <b style="color:#B8860B;letter-spacing:.1em">${roomCode}</b></span>
+      <span>Thẻ: <b style="color:#B8860B">${gs.stockLeft}</b></span>
+      ${isHost?`<button class="btn-secondary" id="btn-end" style="padding:4px 10px;font-size:11px">Kết thúc</button>`:""}
+    </div>
+  </div>
+  <div class="divider"><div></div><div class="diamond"></div><div></div></div>
+  <div class="scoreboard" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${scoreboards}</div>
+  <div class="card" style="padding:10px 14px;margin-bottom:10px">
+    <div style="font-size:12px;color:#7A5C3A;margin-bottom:4px">Tay bạn (${myName}):</div>
+    ${handHTML(gs.players[myIdx]?.tiles||[])}
+  </div>
+  ${gs.trangHolder!==null?`<div class="trang-banner">◈ ${gs.players[gs.trangHolder]?.name} đang giữ Trạng <span style="color:#7A5C3A;font-size:11px">· tuổi ${gs.trangAge>=9000?"∞":gs.trangAge}</span></div>`:""}
+  <div class="turn-banner card" style="padding:8px 14px;margin-bottom:10px">
+    ${isMyTurn
+      ? `<span style="color:#9B1B1B;font-weight:500">Lượt của bạn!</span>`
+      : `<span style="color:#7A5C3A">Lượt của <b style="color:#2C1810">${cur?.name}</b>...</span>`}
+  </div>
+  <div class="card" style="text-align:center;padding:16px 14px">
+    <div style="font-size:11px;color:#B8860B;letter-spacing:.12em;margin-bottom:12px">— TÔ SỨ —</div>
+    <div class="dice-wrap">${diceHTML}</div>
+    ${gs.lastMsg&&!rolling?`<div class="msg ${msgIsSpecial?"special":""}">${gs.lastMsg}</div>`:""}
+    <div class="btn-row">
+      ${isMyTurn&&!gs.rolled?`<button class="btn-primary" id="btn-roll" style="padding:9px 28px;width:auto">${rolling?"Đang gieo...":"⚄ Đổ xúc xắc"}</button>`:""}
+      ${isMyTurn&&gs.rolled?`<button class="btn-secondary" id="btn-next" style="width:auto;padding:9px 20px">Lượt tiếp →</button>`:""}
+      ${!isMyTurn?`<div style="font-size:13px;color:#A08060;padding:9px 0">Đang chờ ${cur?.name}...</div>`:""}
+    </div>
+  </div>
+  <div class="card" style="padding:12px 10px">
+    <div style="font-size:12px;color:#7A5C3A;margin-bottom:10px;text-align:center;letter-spacing:.05em">— KHO THẺ —</div>
+    <div class="stock-grid" style="grid-template-columns:repeat(${TILES.length},1fr)">
+      ${gs.stock.map((s,i)=>tileStackHTML(s,i)).join("")}
+    </div>
+  </div>
+  ${gs.log?.length>0?`<div class="card log-box">${gs.log.map((l,i)=>`<div class="log-line ${i===0?"new":"old"}">${l}</div>`).join("")}</div>`:""}`;
+}
+
+function renderEnd(){
+  if(!gs) return "";
+  const sorted=[...gs.players].map((p,i)=>({...p,oi:i})).sort((a,b)=>b.points-a.points);
+  const rows=sorted.map((p,i)=>`
+    <div class="card" style="${i===0?"background:#FDEAEA;border-color:#9B1B1B80":""}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div class="avatar" style="background:${i===0?"#9B1B1B":i===1?"#B8860B":"#7A5C3A"}">${i+1}</div>
+        <div style="flex:1;font-size:15px;color:#2C1810;font-family:serif">${p.name}${p.oi===myIdx?" (bạn)":""}</div>
+        <div style="font-size:20px;font-weight:500;color:#9B1B1B">${p.points}<span style="font-size:12px;color:#7A5C3A"> đ</span></div>
+      </div>
+      ${handHTML(p.tiles)}
+    </div>`).join("");
+  return `
+  <div style="text-align:center;margin-bottom:16px;padding-top:12px">
+    <h1 style="font-size:22px">Kết quả</h1>
+    <div class="divider"><div></div><div class="diamond"></div><div></div></div>
+  </div>
+  ${rows}
+  <button class="btn-secondary" id="btn-home" style="margin-top:8px">↺ Về trang chủ</button>`;
+}
+
+function bindEvents(){
+  document.getElementById("inp-name")?.addEventListener("input",e=>myName=e.target.value);
+  document.getElementById("btn-create")?.addEventListener("click",createRoom);
+  document.getElementById("btn-join")?.addEventListener("click",()=>{
+    const code=document.getElementById("inp-code")?.value?.trim()?.toUpperCase();
+    if(code) joinRoom(code);
+  });
+  document.getElementById("btn-start")?.addEventListener("click",startGame);
+  document.getElementById("btn-roll")?.addEventListener("click",doRoll);
+  document.getElementById("btn-next")?.addEventListener("click",nextTurn);
+  document.getElementById("btn-end")?.addEventListener("click",()=>{
+    const ng={...gs,phase:"end"}; saveGs(ng); gs=ng; screen="end"; render();
+  });
+  document.getElementById("btn-home")?.addEventListener("click",()=>{
+    if(unsubscribe) unsubscribe();
+    screen="lobby"; myIdx=null; roomCode=""; isHost=false; gs=null; render();
+  });
+}
+
+async function saveGs(state){
+  await set(ref(db,`rooms/${roomCode}`), JSON.parse(JSON.stringify(state)));
+}
+
+function subscribeRoom(code){
+  const r=ref(db,`rooms/${code}`);
+  unsubscribe=onValue(r,snap=>{
+    const data=snap.val(); if(!data) return;
+    gs=data;
+    if(gs.phase==="game"&&screen==="waiting"){screen="game";}
+    if(gs.phase==="end"&&screen==="game"){screen="end";}
+    render();
+  });
+}
+
+async function createRoom(){
+  if(!myName.trim()){alert("Nhập tên trước!"); return;}
+  const code=makeid(); roomCode=code; isHost=true; myIdx=0;
+  const initGs={
+    phase:"waiting",
+    players:[{name:myName.trim(),tiles:TILES.map(()=>0),points:0}],
+    stock:initStock(),stockLeft:TOTAL,turn:0,
+    trangHolder:null,trangAge:0,dice:[1,2,3,4,5,6],rolled:false,lastMsg:"",log:[],
+  };
+  await set(ref(db,`rooms/${code}`), JSON.parse(JSON.stringify(initGs)));
+  gs=initGs; screen="waiting"; subscribeRoom(code); render();
+}
+
+async function joinRoom(code){
+  if(!myName.trim()){alert("Nhập tên trước!"); return;}
+  const snap=await get(ref(db,`rooms/${code}`));
+  if(!snap.exists()){alert("Không tìm thấy phòng!"); return;}
+  const state=snap.val();
+  if(state.phase!=="waiting"){alert("Phòng đã bắt đầu!"); return;}
+  myIdx=state.players.length; roomCode=code; isHost=false;
+  state.players.push({name:myName.trim(),tiles:TILES.map(()=>0),points:0});
+  await set(ref(db,`rooms/${code}`), JSON.parse(JSON.stringify(state)));
+  gs=state; screen="waiting"; subscribeRoom(code); render();
+}
+
+async function startGame(){
+  if(!gs||gs.players.length<2){alert("Cần ít nhất 2 người!"); return;}
+  const ng={...gs,phase:"game"};
+  await saveGs(ng); gs=ng; screen="game"; render();
+}
+
+function doRoll(){
+  if(rolling||!gs||gs.rolled||gs.turn!==myIdx) return;
+  rolling=true; render(); let c=0;
+  const iv=setInterval(()=>{
+    localDice=roll6();
+    document.querySelector(".dice-wrap").innerHTML=localDice.map(d=>dieSVG(d,true)).join("");
+    c++;
+    if(c>=12){
+      clearInterval(iv); rolling=false;
+      const final=roll6(); localDice=final;
+      const newGs=applyRoll(gs,myIdx,final);
+      saveGs(newGs); gs=newGs; render();
+    }
+  },70);
+}
+
+async function nextTurn(){
+  if(!gs) return;
+  const ng={...gs,turn:(gs.turn+1)%gs.players.length,rolled:false};
+  await saveGs(ng); gs=ng; render();
+}
+
+render();
+</script>
+</body>
+</html>

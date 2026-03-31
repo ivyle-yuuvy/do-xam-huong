@@ -1,0 +1,14 @@
+{
+  "name": "Đổ Xăm Hường",
+  "short_name": "Xăm Hường",
+  "description": "Trò chơi dân gian cung đình Huế",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF3E0",
+  "theme_color": "#9B1B1B",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "https://via.placeholder.com/192x192/9B1B1B/FFF5E6?text=XH", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://via.placeholder.com/512x512/9B1B1B/FFF5E6?text=XH", "sizes": "512x512", "type": "image/png" }
+  ]
+}
