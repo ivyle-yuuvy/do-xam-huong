@@ -252,7 +252,8 @@ function renderWaiting(){
   ${isHost
     ? `<button class="btn-primary" id="btn-start" ${players.length<2?"disabled":""}>⟡ Bắt đầu chơi (${players.length} người)</button>`
     : `<div class="waiting-msg">Đang chờ chủ phòng bắt đầu...</div>`
-  }`;
+  }
+  <button onclick="leaveRoom()" class="btn-secondary" style="margin-top:8px">← Thoát phòng</button>`;
 }
 
 function renderGame(){
@@ -274,7 +275,8 @@ function renderGame(){
     <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:#A08060">
       <span>Phòng: <b style="color:#B8860B;letter-spacing:.1em">${roomCode}</b></span>
       <span>Thẻ: <b style="color:#B8860B">${gs.stockLeft}</b></span>
-      ${isHost?`<button class="btn-secondary" id="btn-end" style="padding:4px 10px;font-size:11px">Kết thúc</button>`:""}
+      <button onclick="leaveRoom()" style="padding:4px 10px;font-size:11px;background:transparent;color:#7A5C3A;border:1px solid #B8860B60;border-radius:6px;cursor:pointer;font-family:serif">Thoát</button>
+      ${isHost?`<button id="btn-end" style="padding:4px 10px;font-size:11px;background:transparent;color:#7A5C3A;border:1px solid #B8860B60;border-radius:6px;cursor:pointer;font-family:serif">Kết thúc</button>`:""}
     </div>
   </div>
   <div class="divider"><div></div><div class="diamond"></div><div></div></div>
@@ -283,7 +285,10 @@ function renderGame(){
     <div style="font-size:12px;color:#7A5C3A;margin-bottom:4px">Tay bạn (${myName}):</div>
     ${handHTML(gs.players[myIdx]?.tiles||[])}
   </div>
-  ${gs.trangHolder!==null?`<div class="trang-banner">◈ ${gs.players[gs.trangHolder]?.name} đang giữ Trạng <span style="color:#7A5C3A;font-size:11px">· tuổi ${gs.trangAge>=9000?"∞":gs.trangAge}</span></div>`:""}
+  ${gs.trangHolder!==null&&gs.players[gs.trangHolder]
+    ?`<div class="trang-banner">◈ ${gs.players[gs.trangHolder].name} đang giữ Trạng <span style="color:#7A5C3A;font-size:11px">· tuổi ${gs.trangAge>=9000?"∞":gs.trangAge}</span></div>`
+    :gs.stock[5]?.remaining>0?`<div class="trang-banner" style="background:#FAF3E0;border-color:#B8860B50;color:#7A5C3A">Chưa có ai giữ Trạng</div>`:""
+  }
   <div class="turn-banner card" style="padding:8px 14px;margin-bottom:10px">
     ${isMyTurn
       ? `<span style="color:#9B1B1B;font-weight:500">Lượt của bạn!</span>`
@@ -347,6 +352,13 @@ function bindEvents(){
     screen="lobby"; myIdx=null; roomCode=""; isHost=false; gs=null; render();
   });
 }
+
+function leaveRoom(){
+  if(!confirm("Bạn có chắc muốn thoát phòng không?")) return;
+  if(unsubscribe) unsubscribe();
+  screen="lobby"; myIdx=null; roomCode=""; isHost=false; gs=null; render();
+}
+window.leaveRoom=leaveRoom;
 
 async function saveGs(state){
   await set(ref(db,`rooms/${roomCode}`), JSON.parse(JSON.stringify(state)));
