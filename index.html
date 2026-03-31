@@ -185,7 +185,7 @@ function dieSVG(val,rolling){
     4:[[28,28],[72,28],[28,72],[72,72]],5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
     6:[[28,22],[72,22],[28,50],[72,50],[28,78],[72,78]]};
   const isH=val===4;
-  const dots=(pos[val]||[]).map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="${isH?10:8.5}" fill="${isH?"#9B1B1B":"#2C1810}"/>`).join("");
+  const dots=(pos[val]||[]).map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="${isH?10:8.5}" fill="${isH?"#9B1B1B":"#2C1810"}"/>`).join("");
   return `<svg width="50" height="50" viewBox="0 0 100 100" style="filter:${rolling?"blur(1.5px)":"none"};display:block">
     <rect x="4" y="4" width="92" height="92" rx="14" fill="${isH?"#FFF0F0":"#FFFAF0"}" stroke="${isH?"#9B1B1B":"#B8860B"}" stroke-width="3.5"/>
     <rect x="8" y="8" width="84" height="84" rx="11" fill="none" stroke="${isH?"#D4302030":"#D4A01730"}" stroke-width="1"/>
