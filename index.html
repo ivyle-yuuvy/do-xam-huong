@@ -271,8 +271,9 @@ function renderLobby(){
 function renderWaiting(){
   if(!gs)return"<div style='text-align:center;padding:20px;color:#A08060'>Đang tải...</div>";
   const players=gs.players||[];
-  const onlineCount=players.filter(p=>!p.offline).length;
-  const allReady=players.every((p,i)=>i===gs.hostIdx||p.ready||p.offline);
+  const amHost=isHost||(gs.hostIdx===myIdx);
+  const allReady=players.filter((_,i)=>i!==gs.hostIdx).every(p=>p.ready);
+  const onlineCount=players.length;
   const rows=players.map((p,i)=>{
     const isMe=i===myIdx;const isH2=i===gs.hostIdx;
     const dot=p.offline?'<span class="status-dot offline"></span>':'<span class="status-dot online"></span>';
@@ -295,13 +296,11 @@ function renderWaiting(){
     <div style="font-size:12px;color:#7A5C3A">Chia sẻ mã này cho bạn bè · ${onlineCount} người online</div>
   </div>
   <div class="card">${rows}</div>
-  ${isHost
+  ${amHost
     ?`<button class="btn btn-primary btn-full" id="btn-start" ${(!allReady||onlineCount<2)?"disabled":""}>⟡ Bắt đầu chơi (${onlineCount} người)</button>`
-    :`<div>
-        <button class="btn ${gs.players[myIdx]?.ready?"btn-secondary":"btn-primary"} btn-full" id="btn-ready">
-          ${gs.players[myIdx]?.ready?"✓ Đã sẵn sàng — bỏ sẵn sàng":"⚑ Sẵn sàng"}
-        </button>
-      </div>`
+    :`<button class="btn ${gs.players[myIdx]?.ready?"btn-secondary":"btn-primary"} btn-full" id="btn-ready">
+        ${gs.players[myIdx]?.ready?"✕ Hủy":"⚑ Sẵn sàng"}
+      </button>`
   }
   <button class="btn btn-secondary btn-full" onclick="leaveRoom()" style="margin-top:8px">← Thoát phòng</button>
   </div>`;
@@ -447,10 +446,22 @@ function subscribeRoom(code){
   const r=ref(db,`rooms/${code}`);
   unsubFn=onValue(r,snap=>{
     const data=snap.val();if(!data)return;
+    // ở phòng chờ: cập nhật myIdx nếu danh sách thay đổi (người khác thoát)
+    if(screen==="waiting"&&gs){
+      const oldLen=gs.players?.length||0;
+      const newLen=data.players?.length||0;
+      if(newLen<oldLen&&myIdx!==null){
+        // tìm lại vị trí của mình qua tên
+        const myNewIdx=data.players.findIndex(p=>p.name===(gs.players[myIdx]?.name));
+        if(myNewIdx>=0){
+          myIdx=myNewIdx;
+          isHost=data.hostIdx===myIdx;
+        }
+      }
+    }
     gs=data;
     if(gs.phase==="game"&&screen==="waiting"){screen="game";}
     if(gs.phase==="end"&&(screen==="game"||screen==="waiting")){screen="end";}
-    // nếu ingame chỉ còn 1 người online thì hỏi đóng phòng
     if(screen==="game"&&gs.phase==="game"){
       const onlineCount=gs.players.filter(p=>!p.offline).length;
       if(onlineCount===1&&gs.players[myIdx]&&!gs.players[myIdx].offline){
@@ -459,7 +470,6 @@ function subscribeRoom(code){
         }
       }
     }
-    // auto-skip if current turn is offline and I'm host
     if(screen==="game"&&gs.phase==="game"&&isHost){
       const cur=gs.players[gs.turn];
       if(cur?.offline){setTimeout(()=>skipOffline(),1500);}
@@ -528,13 +538,30 @@ window.kickPlayer=async function(idx){
 
 window.leaveRoom=async function(){
   if(!gs){if(unsubFn)unsubFn();screen="lobby";myIdx=null;roomCode="";isHost=false;render();return;}
+
+  // ở phòng chờ: xóa hẳn người chơi khỏi danh sách
+  if(screen==="waiting"){
+    const np=gs.players.filter((_,i)=>i!==myIdx);
+    let ng={...gs,players:np};
+    // chuyển host nếu cần
+    if(gs.hostIdx===myIdx){
+      ng.hostIdx=0; // người đầu tiên còn lại
+    } else if(gs.hostIdx>myIdx){
+      ng.hostIdx=gs.hostIdx-1;
+    }
+    // cập nhật myIdx cho những người index > myIdx sẽ tự xử lý qua subscribe
+    await saveGs(ng);
+    if(unsubFn)unsubFn();
+    screen="lobby";myIdx=null;roomCode="";isHost=false;gs=null;render();
+    return;
+  }
+
+  // ingame: đánh dấu offline
   const np=gs.players.map(p=>({...p}));
   let ng={...gs,players:np};
   ng=returnTiles(ng,myIdx);
   ng.players[myIdx].offline=true;
   ng.log=[`${np[myIdx].name} đã rời phòng.`,...(ng.log||[])].slice(0,20);
-
-  // transfer host if I was host
   if(gs.hostIdx===myIdx){
     const newHost=ng.players.findIndex((p,i)=>i!==myIdx&&!p.offline);
     if(newHost>=0)ng.hostIdx=newHost;
