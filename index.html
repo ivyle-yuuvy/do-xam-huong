@@ -447,16 +447,22 @@ function subscribeRoom(code){
   const r=ref(db,`rooms/${code}`);
   unsubFn=onValue(r,snap=>{
     const data=snap.val();if(!data)return;
-    const prev=gs;gs=data;
-    // detect phase change
+    gs=data;
     if(gs.phase==="game"&&screen==="waiting"){screen="game";}
     if(gs.phase==="end"&&(screen==="game"||screen==="waiting")){screen="end";}
+    // nếu ingame chỉ còn 1 người online thì hỏi đóng phòng
+    if(screen==="game"&&gs.phase==="game"){
+      const onlineCount=gs.players.filter(p=>!p.offline).length;
+      if(onlineCount===1&&gs.players[myIdx]&&!gs.players[myIdx].offline){
+        if(confirm("Chỉ còn bạn trong phòng. Bạn có muốn đóng phòng không?")){
+          endGame();return;
+        }
+      }
+    }
     // auto-skip if current turn is offline and I'm host
     if(screen==="game"&&gs.phase==="game"&&isHost){
       const cur=gs.players[gs.turn];
-      if(cur?.offline){
-        setTimeout(()=>skipOffline(),1500);
-      }
+      if(cur?.offline){setTimeout(()=>skipOffline(),1500);}
     }
     render();
   });
@@ -522,10 +528,6 @@ window.kickPlayer=async function(idx){
 
 window.leaveRoom=async function(){
   if(!gs){if(unsubFn)unsubFn();screen="lobby";myIdx=null;roomCode="";isHost=false;render();return;}
-  const onlinePlayers=gs.players.filter(p=>!p.offline);
-  if(onlinePlayers.length<=2){
-    if(!confirm("Chỉ còn bạn (hoặc 1 người khác) trong phòng. Bạn có muốn đóng phòng không?"))return;
-  }
   const np=gs.players.map(p=>({...p}));
   let ng={...gs,players:np};
   ng=returnTiles(ng,myIdx);
