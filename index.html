@@ -311,10 +311,10 @@ function renderGame(){
   if(!gs)return"<div style='text-align:center;padding:20px;color:#A08060'>Đang tải...</div>";
   const players=gs.players||[];
   const n=players.length;
+  const amHost=isHost||(gs.hostIdx===myIdx);
   const isMyTurn=gs.turn===myIdx;
-  const cur=players[gs.turn];
 
-  // seat order: top-left, top-right, bottom-left, bottom-right, top-center, bottom-center
+  const cur=players[gs.turn]; top-left, top-right, bottom-left, bottom-right, top-center, bottom-center
   const seatOrder=[0,1,2,3,4,5].slice(0,n);
   const seatsHTML=seatOrder.map(i=>{
     const p=players[i];if(!p)return"";
@@ -347,7 +347,7 @@ function renderGame(){
       <span>Phòng: <b style="color:#B8860B">${roomCode}</b></span>
       <span>Thẻ: <b style="color:#B8860B">${gs.stockLeft}</b></span>
       <button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" onclick="leaveRoom()">Thoát</button>
-      ${isHost?`<button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" id="btn-end">Kết thúc</button>`:""}
+      ${amHost?`<button class="btn btn-secondary" style="font-size:11px;padding:3px 8px" id="btn-end">Kết thúc</button>`:""}
     </div>
   </div>
   <div class="divider"><div></div><div class="diamond"></div><div></div></div>
@@ -446,19 +446,41 @@ function subscribeRoom(code){
   const r=ref(db,`rooms/${code}`);
   unsubFn=onValue(r,snap=>{
     const data=snap.val();if(!data)return;
-    // ở phòng chờ: cập nhật myIdx nếu danh sách thay đổi (người khác thoát)
+
+    // kiểm tra bị kick ở phòng chờ
+    if(screen==="waiting"&&myIdx!==null){
+      const myNameNow=gs?.players[myIdx]?.name;
+      const stillHere=data.players?.some(p=>p.name===myNameNow);
+      if(!stillHere&&myNameNow){
+        // bị kick hoặc thoát — kiểm tra kickedName
+        if(data.kickedName===myNameNow){
+          alert("Bạn đã bị đuổi ra khỏi phòng!");
+        }
+        if(unsubFn)unsubFn();
+        screen="lobby";myIdx=null;roomCode="";isHost=false;gs=null;render();return;
+      }
+    }
+
+    // kiểm tra bị kick ingame
+    if(screen==="game"&&myIdx!==null&&data.kickedIdx===myIdx){
+      alert("Bạn đã bị đuổi ra khỏi phòng!");
+      // xóa kickedIdx
+      const ng={...data,kickedIdx:null};
+      set(ref(db,`rooms/${roomCode}`),JSON.parse(JSON.stringify(ng)));
+      if(unsubFn)unsubFn();
+      screen="lobby";myIdx=null;roomCode="";isHost=false;gs=null;render();return;
+    }
+
+    // phòng chờ: cập nhật myIdx nếu danh sách thay đổi
     if(screen==="waiting"&&gs){
       const oldLen=gs.players?.length||0;
       const newLen=data.players?.length||0;
       if(newLen<oldLen&&myIdx!==null){
-        // tìm lại vị trí của mình qua tên
         const myNewIdx=data.players.findIndex(p=>p.name===(gs.players[myIdx]?.name));
-        if(myNewIdx>=0){
-          myIdx=myNewIdx;
-          isHost=data.hostIdx===myIdx;
-        }
+        if(myNewIdx>=0){myIdx=myNewIdx;isHost=data.hostIdx===myIdx;}
       }
     }
+
     gs=data;
     if(gs.phase==="game"&&screen==="waiting"){screen="game";}
     if(gs.phase==="end"&&(screen==="game"||screen==="waiting")){screen="end";}
@@ -470,7 +492,7 @@ function subscribeRoom(code){
         }
       }
     }
-    if(screen==="game"&&gs.phase==="game"&&isHost){
+    if(screen==="game"&&gs.phase==="game"&&(isHost||(gs.hostIdx===myIdx))){
       const cur=gs.players[gs.turn];
       if(cur?.offline){setTimeout(()=>skipOffline(),1500);}
     }
@@ -523,17 +545,23 @@ async function endGame(){
 }
 
 window.kickPlayer=async function(idx){
-  if(!gs||!isHost)return;
+  if(!gs||!(isHost||(gs.hostIdx===myIdx)))return;
   if(!confirm(`Kick ${gs.players[idx]?.name} ra khỏi phòng?`))return;
-  const np=gs.players.map(p=>({...p}));
-  let ng={...gs,players:np};
-  // return tiles
-  ng=returnTiles(ng,idx);
-  ng.players[idx].offline=true;
-  ng.log=[`${np[idx].name} đã bị kick khỏi phòng.`,...(ng.log||[])].slice(0,20);
-  // if turn was theirs, advance
-  if(ng.turn===idx)ng=advanceTurn(ng);
-  await saveGs(ng);
+
+  if(screen==="waiting"){
+    const np=gs.players.filter((_,i)=>i!==idx);
+    let ng={...gs,players:np,kickedName:gs.players[idx]?.name};
+    if(gs.hostIdx>idx)ng.hostIdx=gs.hostIdx-1;
+    await saveGs(ng);
+  } else {
+    const np=gs.players.map(p=>({...p}));
+    let ng={...gs,players:np,kickedIdx:idx};
+    ng=returnTiles(ng,idx);
+    ng.players[idx].offline=true;
+    ng.log=[`${np[idx].name} đã rời phòng.`,...(ng.log||[])].slice(0,20);
+    if(ng.turn===idx)ng=advanceTurn(ng);
+    await saveGs(ng);
+  }
 };
 
 window.leaveRoom=async function(){
@@ -557,6 +585,7 @@ window.leaveRoom=async function(){
   }
 
   // ingame: đánh dấu offline
+  if(!confirm(`Bạn có chắc muốn thoát phòng không?`))return;
   const np=gs.players.map(p=>({...p}));
   let ng={...gs,players:np};
   ng=returnTiles(ng,myIdx);
