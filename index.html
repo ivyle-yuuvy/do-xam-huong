@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#FAF3E0;font-family:serif;min-height:100vh;overflow-x:hidden}
+body{background:#FAF3E0;font-family:serif;font-size:18px;min-height:100vh;overflow-x:hidden}
 
 /* ── LOBBY / WAITING / END ── */
 .page{max-width:480px;margin:0 auto;padding:1.25rem 1rem}
@@ -246,12 +246,12 @@ function tileSVG(idx,w,h,faded){
 
 function tileStackHTML(tile,idx){
   const n=Math.min(tile.remaining,4);const empty=tile.remaining===0;const rc=TILES[idx]?.col||"#888";
-  let s=empty?tileSVG(idx,40,122,true):"";
-  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,40,122,false)}</div>`;
-  return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-    <div class="tl" style="color:${rc};font-size:11px;font-weight:500">${TILES[idx].name}</div>
-    <div style="position:relative;width:40px;height:128px">${s}</div>
-    <div class="tc" style="color:${empty?"#aaa":rc};font-size:10px">${tile.remaining}/${tile.count}</div>
+  let s=empty?tileSVG(idx,46,140,true):"";
+  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,46,140,false)}</div>`;
+  return`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+    <div class="tl" style="color:${rc};font-size:12px;font-weight:600">${TILES[idx].name}</div>
+    <div style="position:relative;width:46px;height:146px">${s}</div>
+    <div class="tc" style="color:${empty?"#aaa":rc};font-size:11px;font-weight:500">${tile.remaining}/${tile.count}</div>
   </div>`;
 }
 
@@ -260,10 +260,10 @@ function handMiniHTML(tiles){
   tiles.forEach((n,ti)=>{
     if(n<=0)return;
     let s="";
-    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*2}px">${tileSVG(ti,30,92,false)}</div>`;
-    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="position:relative;width:30px;height:${n>1?96:92}px">${s}</div>
-      ${n>1?`<div style="font-size:10px;color:${TILES[ti].col};font-family:sans-serif;text-align:center;font-weight:500">×${n}</div>`:""}
+    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*2}px">${tileSVG(ti,36,110,false)}</div>`;
+    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="position:relative;width:36px;height:${n>1?114:110}px">${s}</div>
+      <div style="font-size:13px;color:${TILES[ti].col};font-family:sans-serif;text-align:center;font-weight:700;background:#fff;border-radius:4px;padding:2px 6px;border:1.5px solid ${TILES[ti].col}">×${n}</div>
     </div>`;
   });
   return h?`<div class="hand-mini">${h}</div>`:"";
@@ -462,7 +462,13 @@ function renderGame(){
 
     <!-- TOP BAR -->
     <div class="top-bar">
-      <div class="top-bar-left">Đổ Xăm Hường · <span style="color:#fff;letter-spacing:.15em">${roomCode}</span> · Thẻ: <b style="color:#D4A017">${gs.stockLeft}</b></div>
+    <div class="top-bar-left">
+      <span style="color:#9B1B1B;font-size:17px">Đổ Xăm Hường</span>
+      <span style="margin:0 10px;color:#B8860B">·</span>
+      <span>Phòng: <b style="color:#9B1B1B;letter-spacing:.12em">${roomCode}</b></span>
+      <span style="margin:0 10px;color:#B8860B">·</span>
+      <span>Thẻ còn: <b style="color:#9B1B1B">${gs.stockLeft}</b></span>
+    </div>
       <div class="top-bar-right">
         ${iAm?`<button class="gbtn" id="btn-end">Kết thúc</button>`:""}
         <button class="gbtn" onclick="doLeave()">Thoát</button>
