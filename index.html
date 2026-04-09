@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#1a0a00;font-family:serif;min-height:100vh;overflow-x:hidden}
+body{background:#FAF3E0;font-family:serif;min-height:100vh;overflow-x:hidden}
 
 /* ── LOBBY / WAITING / END ── */
 .page{max-width:480px;margin:0 auto;padding:1.25rem 1rem}
@@ -43,16 +43,11 @@ input{width:100%;padding:8px 12px;border:1px solid #B8860B60;border-radius:6px;f
 /* ── GAME TABLE ── */
 .table{
   width:100vw;height:100vh;
-  background:radial-gradient(ellipse at center, #2d5a1b 0%, #1a3a0e 60%, #0f2208 100%);
+  background:#FAF3E0;
   position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
 }
-/* felt texture lines */
-.table::before{
-  content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);
-  pointer-events:none;
-}
+.table::before{display:none}
 /* table border */
 .table-border{
   position:absolute;inset:12px;border-radius:50px;
@@ -251,12 +246,12 @@ function tileSVG(idx,w,h,faded){
 
 function tileStackHTML(tile,idx){
   const n=Math.min(tile.remaining,4);const empty=tile.remaining===0;const rc=TILES[idx]?.col||"#888";
-  let s=empty?tileSVG(idx,28,85,true):"";
-  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,28,85,false)}</div>`;
+  let s=empty?tileSVG(idx,34,104,true):"";
+  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,34,104,false)}</div>`;
   return`<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
-    <div class="tl" style="color:${rc};font-size:9px">${TILES[idx].name}</div>
-    <div style="position:relative;width:28px;height:90px">${s}</div>
-    <div class="tc" style="color:${empty?"#555":rc};font-size:8px">${tile.remaining}/${tile.count}</div>
+    <div class="tl" style="color:${rc};font-size:10px">${TILES[idx].name}</div>
+    <div style="position:relative;width:34px;height:110px">${s}</div>
+    <div class="tc" style="color:${empty?"#aaa":rc};font-size:9px">${tile.remaining}/${tile.count}</div>
   </div>`;
 }
 
@@ -265,9 +260,11 @@ function handMiniHTML(tiles){
   tiles.forEach((n,ti)=>{
     if(n<=0)return;
     let s="";
-    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*1.5}px;left:${k*1}px">${tileSVG(ti,18,55,false)}</div>`;
-    h+=`<div style="position:relative;width:18px;height:${n>1?58:55}px">${s}</div>
-        ${n>1?`<div style="font-size:8px;color:${TILES[ti].col};font-family:sans-serif;text-align:center">×${n}</div>`:""}`;
+    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1.5}px">${tileSVG(ti,24,73,false)}</div>`;
+    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="position:relative;width:24px;height:${n>1?76:73}px">${s}</div>
+      ${n>1?`<div style="font-size:9px;color:${TILES[ti].col};font-family:sans-serif;text-align:center">×${n}</div>`:""}
+    </div>`;
   });
   return h?`<div class="hand-mini">${h}</div>`:"";
 }
@@ -369,7 +366,7 @@ function cleanup(){
 
 // ── RENDER ──
 function renderLobby(){
-  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2d1a00,#0f0800)">
+  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FAF3E0">
   <div class="page" style="width:100%">
     <div style="text-align:center;margin-bottom:20px;padding-top:12px">
       <div class="sub">❧ CUNG ĐÌNH HUẾ ❧</div>
@@ -411,10 +408,10 @@ function renderWaiting(){
       <div style="flex:1">${dot}<span style="font-size:14px;color:#2C1810">${p.name}${isMe?" (bạn)":""}</span>${bgs}</div>
       ${kick}</div>`;
   }).join("");
-  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2d1a00,#0f0800)">
+  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FAF3E0">
   <div class="page" style="width:100%">
     <div style="text-align:center;margin-bottom:16px;padding-top:12px">
-      <h1 style="font-size:20px;color:#D4A017">Phòng chờ</h1>
+      <h1 style="font-size:20px;color:#9B1B1B">Phòng chờ</h1>
       ${divider()}
       <div class="code">${roomCode}</div>
       <div style="font-size:12px;color:#8B6914">Chia sẻ mã · ${ps.length} người</div>
@@ -457,7 +454,7 @@ function renderGame(){
     </div>`;
   }).join("");
 
-  const diceHTML=displayDice.map(d=>dieSVG(d,rolling,42)).join("");
+  const diceHTML=displayDice.map(d=>dieSVG(d,rolling,52)).join("");
 
   return`<div class="table">
     <div class="table-border"></div>
@@ -509,10 +506,10 @@ function renderEnd(){
       </div>
       ${!p.offline?handHTML(p.tiles):""}
     </div>`).join("");
-  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2d1a00,#0f0800)">
+  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FAF3E0">
   <div class="page" style="width:100%">
     <div style="text-align:center;margin-bottom:16px;padding-top:12px">
-      <h1 style="font-size:22px;color:#D4A017">Kết quả</h1>${divider()}
+      <h1 style="font-size:22px;color:#9B1B1B">Kết quả</h1>${divider()}
     </div>
     ${rows}
     <button class="btn bs bf" id="btn-home" style="margin-top:8px">↺ Về trang chủ</button>
@@ -625,7 +622,7 @@ function doRoll(){
   const iv=setInterval(()=>{
     localDice=roll6();
     const dw=document.querySelector(".dice-row");
-    if(dw)dw.innerHTML=localDice.map(d=>dieSVG(d,true,42)).join("");
+          if(dw)dw.innerHTML=localDice.map(d=>dieSVG(d,true,52)).join("");
     cnt++;
     if(cnt>=12){
       clearInterval(iv);rolling=false;
