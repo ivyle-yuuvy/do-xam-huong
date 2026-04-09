@@ -191,7 +191,7 @@ function tileStackHTML(tile,idx){
   const rc=TILES[idx]?.col||"#888";
   let stacks="";
   if(empty){stacks=tileSVG(idx,36,110,true);}
-  else{for(let i=0;i<n;i++)stacks+=`<div style="position:absolute;top:${i*3}px;left:${i*1.5}px">${tileSVG(idx,36,110,false)}</div>`;}
+  else{for(let i2=0;i2<n;i2++)stacks+=`<div style="position:absolute;top:${i2*3}px;left:${i2*1.5}px">${tileSVG(idx,36,110,false)}</div>`;}
   return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
     <div class="tile-label" style="color:${rc}">${TILES[idx]?.name}</div>
     <div style="position:relative;width:36px;height:116px">${stacks}</div>
@@ -204,13 +204,13 @@ function handHTML(tiles){
   const has=tiles.some(n=>n>0);
   if(!has)return`<div style="font-size:11px;color:#A08060;font-style:italic">Chưa có thẻ</div>`;
   let html="";
-  tiles.forEach((n,i)=>{
+  tiles.forEach((n,ti)=>{
     if(n<=0)return;
     let stacks="";
-    for(let j=0;j<Math.min(n,3);j++)stacks+=`<div style="position:absolute;top:${j*2}px;left:${j}px">${tileSVG(i,27,83,false)}</div>`;
+    for(let j=0;j<Math.min(n,3);j++)stacks+=`<div style="position:absolute;top:${j*2}px;left:${j}px">${tileSVG(ti,27,83,false)}</div>`;
     html+=`<div class="hand-item">
       <div style="position:relative;width:27px;height:${n>1?80:75}px">${stacks}</div>
-      ${n>1?`<div style="font-size:9px;color:${TILES[i]?.col};font-family:sans-serif">×${n}</div>`:""}
+      ${n>1?`<div style="font-size:9px;color:${TILES[ti]?.col};font-family:sans-serif">×${n}</div>`:""}
     </div>`;
   });
   return`<div class="hand-wrap">${html}</div>`;
@@ -271,10 +271,11 @@ function renderLobby(){
 function renderWaiting(){
   if(!gs)return"<div style='text-align:center;padding:20px;color:#A08060'>Đang tải...</div>";
   const players=gs.players||[];
-  const amHost=isHost||(gs.hostIdx===myIdx);
+  const amHost=(gs.hostIdx===myIdx);
   const onlineCount=players.length;
   const nonHostPlayers=players.filter((_,i)=>i!==gs.hostIdx);
   const allReady=nonHostPlayers.length===0||nonHostPlayers.every(p=>p.ready);
+  const canStart=allReady&&onlineCount>=2;ayers.every(p=>p.ready);
   const canStart=allReady&&onlineCount>=2;
   console.log("DEBUG:",{myIdx,hostIdx:gs.hostIdx,isHost,amHost,allReady,onlineCount,canStart});
   const rows=players.map((p,i)=>{
