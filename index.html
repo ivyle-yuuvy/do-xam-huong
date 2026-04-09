@@ -272,7 +272,10 @@ function renderWaiting(){
   if(!gs)return"<div style='text-align:center;padding:20px;color:#A08060'>Đang tải...</div>";
   const players=gs.players||[];
   const amHost=isHost||(gs.hostIdx===myIdx);
-  const allReady=players.filter((_,i)=>i!==gs.hostIdx).every(p=>p.ready);
+  const nonHostPlayers=players.filter((_,i)=>i!==gs.hostIdx);
+  const allReady=nonHostPlayers.length===0||nonHostPlayers.every(p=>p.ready);
+  const canStart=allReady&&onlineCount>=2;
+  console.log("DEBUG waiting:",{myIdx,hostIdx:gs.hostIdx,isHost,amHost,allReady,onlineCount,canStart,players:players.map(p=>({name:p.name,ready:p.ready}))});
   const onlineCount=players.length;
   const rows=players.map((p,i)=>{
     const isMe=i===myIdx;const isH2=i===gs.hostIdx;
@@ -297,7 +300,7 @@ function renderWaiting(){
   </div>
   <div class="card">${rows}</div>
   ${amHost
-    ?`<button class="btn btn-primary btn-full" id="btn-start" ${(!allReady||onlineCount<2)?"disabled":""}>⟡ Bắt đầu chơi (${onlineCount} người)</button>`
+    ?`    <button class="btn btn-primary btn-full" id="btn-start" ${!canStart?"disabled":""}>⟡ Bắt đầu chơi (${onlineCount} người)</button>`
     :`<button class="btn ${gs.players[myIdx]?.ready?"btn-secondary":"btn-primary"} btn-full" id="btn-ready">
         ${gs.players[myIdx]?.ready?"✕ Hủy":"⚑ Sẵn sàng"}
       </button>`
