@@ -246,12 +246,12 @@ function tileSVG(idx,w,h,faded){
 
 function tileStackHTML(tile,idx){
   const n=Math.min(tile.remaining,4);const empty=tile.remaining===0;const rc=TILES[idx]?.col||"#888";
-  let s=empty?tileSVG(idx,34,104,true):"";
-  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,34,104,false)}</div>`;
-  return`<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
-    <div class="tl" style="color:${rc};font-size:10px">${TILES[idx].name}</div>
-    <div style="position:relative;width:34px;height:110px">${s}</div>
-    <div class="tc" style="color:${empty?"#aaa":rc};font-size:9px">${tile.remaining}/${tile.count}</div>
+  let s=empty?tileSVG(idx,40,122,true):"";
+  if(!empty)for(let k=0;k<n;k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1}px">${tileSVG(idx,40,122,false)}</div>`;
+  return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+    <div class="tl" style="color:${rc};font-size:11px;font-weight:500">${TILES[idx].name}</div>
+    <div style="position:relative;width:40px;height:128px">${s}</div>
+    <div class="tc" style="color:${empty?"#aaa":rc};font-size:10px">${tile.remaining}/${tile.count}</div>
   </div>`;
 }
 
@@ -260,10 +260,10 @@ function handMiniHTML(tiles){
   tiles.forEach((n,ti)=>{
     if(n<=0)return;
     let s="";
-    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*1.5}px">${tileSVG(ti,24,73,false)}</div>`;
-    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
-      <div style="position:relative;width:24px;height:${n>1?76:73}px">${s}</div>
-      ${n>1?`<div style="font-size:9px;color:${TILES[ti].col};font-family:sans-serif;text-align:center">×${n}</div>`:""}
+    for(let k=0;k<Math.min(n,3);k++)s+=`<div style="position:absolute;top:${k*2}px;left:${k*2}px">${tileSVG(ti,30,92,false)}</div>`;
+    h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="position:relative;width:30px;height:${n>1?96:92}px">${s}</div>
+      ${n>1?`<div style="font-size:10px;color:${TILES[ti].col};font-family:sans-serif;text-align:center;font-weight:500">×${n}</div>`:""}
     </div>`;
   });
   return h?`<div class="hand-mini">${h}</div>`:"";
@@ -454,7 +454,7 @@ function renderGame(){
     </div>`;
   }).join("");
 
-  const diceHTML=displayDice.map(d=>dieSVG(d,rolling,52)).join("");
+  const diceHTML=displayDice.map(d=>dieSVG(d,rolling,62)).join("");
 
   return`<div class="table">
     <div class="table-border"></div>
@@ -622,7 +622,7 @@ function doRoll(){
   const iv=setInterval(()=>{
     localDice=roll6();
     const dw=document.querySelector(".dice-row");
-          if(dw)dw.innerHTML=localDice.map(d=>dieSVG(d,true,52)).join("");
+          if(dw)dw.innerHTML=localDice.map(d=>dieSVG(d,true,62)).join("");
     cnt++;
     if(cnt>=12){
       clearInterval(iv);rolling=false;
