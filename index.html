@@ -436,6 +436,9 @@ function renderGame(){
   const trangText=gs.trangHolder!==null&&ps[gs.trangHolder]
     ?`◈ ${ps[gs.trangHolder].name} giữ Trạng · tuổi ${gs.trangAge>=9000?"∞":gs.trangAge}`
     :`Chưa có ai giữ Trạng`;
+  const trangStyle=gs.trangHolder!==null&&ps[gs.trangHolder]
+    ?`background:#FFF8ED;border:2px solid #B8860B;border-radius:8px;padding:9px 22px;font-size:15px;color:#2C1810;text-align:center;font-weight:500;`
+    :`background:#9B1B1B;border:2px solid #9B1B1B;border-radius:8px;padding:9px 22px;font-size:15px;color:#ffffff;text-align:center;font-weight:500;`;
 
   const seatsHTML=ps.map((p,si)=>{
     const isMe=si===myIdx;const active=si===gs.turn&&!p.offline;
@@ -463,15 +466,15 @@ function renderGame(){
     <!-- TOP BAR -->
     <div class="top-bar">
     <div class="top-bar-left">
-      <span style="color:#9B1B1B;font-size:17px">Đổ Xăm Hường</span>
-      <span style="margin:0 10px;color:#B8860B">·</span>
-      <span>Phòng: <b style="color:#9B1B1B;letter-spacing:.12em">${roomCode}</b></span>
-      <span style="margin:0 10px;color:#B8860B">·</span>
-      <span>Thẻ còn: <b style="color:#9B1B1B">${gs.stockLeft}</b></span>
+      <span style="color:#9B1B1B;font-size:17px;font-weight:600">Đổ Xăm Hường</span>
+      <span style="margin:0 12px;color:#B8860B">·</span>
+      <span style="color:#5C3D0E">Phòng: <b style="color:#9B1B1B;letter-spacing:.12em">${roomCode}</b></span>
+      <span style="margin:0 12px;color:#B8860B">·</span>
+      <span style="color:#5C3D0E">Thẻ còn: <b style="color:#9B1B1B">${gs.stockLeft}</b></span>
     </div>
       <div class="top-bar-right">
-        ${iAm?`<button class="gbtn" id="btn-end">Kết thúc</button>`:""}
-        <button class="gbtn" onclick="doLeave()">Thoát</button>
+        ${iAm?`<button class="gbtn" style="font-size:15px;padding:8px 18px;background:#F5EDD6;color:#9B1B1B;border-color:#9B1B1B" id="btn-end">Kết thúc</button>`:""}
+        <button class="gbtn" style="font-size:15px;padding:8px 18px;background:#F5EDD6;color:#5C3D0E;border-color:#B8860B" onclick="doLeave()">Thoát</button>
       </div>
     </div>
 
@@ -480,7 +483,7 @@ function renderGame(){
       <div class="game-title">— TÔ SỨ —</div>
       <div class="dice-row">${diceHTML}</div>
       ${gs.lastMsg&&!rolling?`<div class="msg-box${msgSpecial?" special":""}">${gs.lastMsg}</div>`:""}
-      <div class="trang-box">${trangText}</div>
+      <div style="${trangStyle}">${trangText}</div>
       <div class="action-row">
         ${isMyTurn&&!gs.rolled&&!ps[myIdx]?.offline?`<button class="gbtn primary" id="btn-roll">${rolling?"Đang gieo...":"⚄ Đổ xúc xắc"}</button>`:""}
         ${isMyTurn&&gs.rolled?`<button class="gbtn" id="btn-next">Lượt tiếp →</button>`:""}
