@@ -387,7 +387,10 @@ function renderLobby(){
       <input id="inp-code" type="text" placeholder="Nhập mã phòng..." style="text-align:center;letter-spacing:.2em;font-size:16px;text-transform:uppercase;margin-bottom:10px"/>
       <button class="btn bs bf" id="btn-join">→ Vào phòng</button>
     </div>
-  </div></div>`;
+    <div class="card" style="border:1.5px dashed #B8860B60">
+      <div style="font-size:12px;color:#A08060;margin-bottom:8px">Chế độ thử nghiệm giao diện</div>
+      <button class="btn bs bf" id="btn-testui">🎨 Test UI (không cần phòng)</button>
+    </div>
 }
 
 function renderWaiting(){
@@ -535,6 +538,7 @@ function render(){
 }
 
 function bindEvents(){
+  document.getElementById("btn-testui")?.addEventListener("click",doTestUI);
   document.getElementById("inp-name")?.addEventListener("input",e=>myName=e.target.value);
   document.getElementById("btn-create")?.addEventListener("click",doCreate);
   document.getElementById("btn-join")?.addEventListener("click",()=>{
@@ -551,6 +555,33 @@ function bindEvents(){
 }
 
 // ── ACTIONS ──
+function doTestUI(){
+  myName="Test"; myIdx=0; roomCode="TEST"; isHost=true;
+  gs={
+    phase:"game", hostIdx:0,
+    players:[
+      {name:"Nguyễn Văn A",tiles:[3,2,1,0,0,0],points:11,ready:true,offline:false},
+      {name:"Trần Thị B",tiles:[1,0,0,1,0,0],points:9,ready:true,offline:false},
+      {name:"Lê C (offline)",tiles:[0,1,0,0,0,0],points:2,ready:true,offline:true},
+      {name:"Phạm D",tiles:[2,0,1,0,0,0],points:6,ready:true,offline:false},
+    ],
+    stock:initStock().map((s,i)=>{
+      const taken=[3,2,1,0,0,0];
+      return{...s,remaining:Math.max(0,s.remaining-taken[i]*2)};
+    }),
+    stockLeft:52, turn:0, trangHolder:1, trangAge:4008,
+    dice:[4,4,1,3,2,6], rolled:true,
+    lastMsg:"Nguyễn Văn A: Tứ hường cáp xiên (tuổi 4) — đoạt Trạng!",
+    log:[
+      "Nguyễn Văn A: Tứ hường cáp xiên (tuổi 4) — đoạt Trạng!",
+      "Trần Thị B: Nhị hường — Cử nhân! (+2đ)",
+      "Lê C (offline): Không có mặt Hường.",
+      "Phạm D: Nhất hường — Tú tài! (+1đ)",
+    ],
+  };
+  screen="game"; render();
+}
+
 async function doCreate(){
   if(!myName.trim()){alert("Nhập tên trước!");return;}
   const code=makeid();roomCode=code;isHost=true;myIdx=0;
