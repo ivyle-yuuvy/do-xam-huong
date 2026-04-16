@@ -308,13 +308,13 @@ const SEAT_POS=[
 ];
 function seatClass(idx,total){
   const layouts={
-    2:["s-bl","s-br"],
-    3:["s-tl","s-tr","s-bc"],
-    4:["s-tl","s-tr","s-bl","s-br"],
-    5:["s-tl","s-tr","s-bl","s-br","s-tc"],
-    6:["s-tl","s-tc","s-tr","s-bl","s-bc","s-br"],
+    2:["gc-tl","gc-tr"],
+    3:["gc-tl","gc-tr","gc-bc"],
+    4:["gc-tl","gc-tr","gc-bl","gc-br"],
+    5:["gc-tl","gc-tr","gc-bl","gc-br","gc-tc"],
+    6:["gc-tl","gc-tc","gc-tr","gc-bl","gc-bc","gc-br"],
   };
-  return(layouts[total]||layouts[4])[idx]||"s-tl";
+  return(layouts[total]||layouts[4])[idx]||"gc-tl";
 }
 
 // ── STATE ──
