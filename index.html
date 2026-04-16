@@ -45,6 +45,7 @@ input{width:100%;padding:8px 12px;border:1px solid #B8860B60;border-radius:6px;f
   width:100vw;height:100vh;
   background:#FAF3E0;
   position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
 }
 .table::before{display:none}
 /* table border */
@@ -307,13 +308,13 @@ const SEAT_POS=[
 ];
 function seatClass(idx,total){
   const layouts={
-    2:["gc-tl","gc-tr"],
-    3:["gc-tl","gc-tr","gc-bc"],
-    4:["gc-tl","gc-tr","gc-bl","gc-br"],
-    5:["gc-tl","gc-tr","gc-bl","gc-br","gc-tc"],
-    6:["gc-tl","gc-tc","gc-tr","gc-bl","gc-bc","gc-br"],
+    2:["s-bl","s-br"],
+    3:["s-tl","s-tr","s-bc"],
+    4:["s-tl","s-tr","s-bl","s-br"],
+    5:["s-tl","s-tr","s-bl","s-br","s-tc"],
+    6:["s-tl","s-tc","s-tr","s-bl","s-bc","s-br"],
   };
-  return(layouts[total]||layouts[4])[idx]||"gc-tl";
+  return(layouts[total]||layouts[4])[idx]||"s-tl";
 }
 
 // ── STATE ──
