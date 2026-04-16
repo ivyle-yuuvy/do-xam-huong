@@ -303,18 +303,15 @@ function divider(){return`<div class="divr"><div></div><div class="dia"></div><d
 
 // ── SEAT POSITIONS ──
 // order: tl, tr, bl, br, tc, bc  (for 2-6 players)
-const SEAT_POS=[
-  ["s-tl","s-tr","s-bl","s-br","s-tc","s-bc"],  // 2-6p layout
-];
-function seatClass(idx,total){
-  const layouts={
-    2:["s-bl","s-br"],
-    3:["s-tl","s-tr","s-bc"],
-    4:["s-tl","s-tr","s-bl","s-br"],
-    5:["s-tl","s-tr","s-bl","s-br","s-tc"],
-    6:["s-tl","s-tc","s-tr","s-bl","s-bc","s-br"],
-  };
-  return(layouts[total]||layouts[4])[idx]||"s-tl";
+const SEAT_STYLES={
+  2:["top:110px;left:500px","top:110px;right:500px"],
+  3:["top:110px;left:500px","top:110px;right:500px","bottom:80px;left:50%;transform:translateX(-50%)"],
+  4:["top:110px;left:500px","top:110px;right:500px","bottom:80px;left:500px","bottom:80px;right:500px"],
+  5:["top:110px;left:500px","top:110px;right:500px","bottom:80px;left:500px","bottom:80px;right:500px","top:110px;left:50%;transform:translateX(-50%)"],
+  6:["top:110px;left:500px","top:110px;left:50%;transform:translateX(-50%)","top:110px;right:500px","bottom:80px;left:500px","bottom:80px;left:50%;transform:translateX(-50%)","bottom:80px;right:500px"],
+};
+function seatStyle(idx,total){
+  return(SEAT_STYLES[total]||SEAT_STYLES[4])[idx]||"top:110px;left:500px";
 }
 
 // ── STATE ──
